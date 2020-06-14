@@ -1,1 +1,57 @@
 pasos para hacer deploy de app angular en kubernetes
+
+link video
+https://www.youtube.com/watch?v=1uYsai1giUw
+
+DOCKERFILE
+----------------------------------------------------------------------------------------------------------------------------------------
+FROM node:latest as node
+WORKDIR /app
+COPY . .
+RUN npm install
+RUN npm run build --prod
+
+FROM nginx:alpine
+COPY --from=node /app/dist /usr/share/nginx/html
+----------------------------------------------------------------------------------------------------------------------------------------
+
+DEPLOYMENT.YAML
+----------------------------------------------------------------------------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: angular-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: angular
+  template:
+    metadata:
+      labels:
+        app: angular
+    spec:
+      containers:
+        - name: angular
+          image: jees10/frontend:v1          
+          ports:
+            - containerPort: 80
+            
+---------------------------------------------------------------------------------------------------------------------------------------
+
+SERVICE
+---------------------------------------------------------------------------------------------------------------------------------------
+kind: Service
+apiVersion: v1
+metadata:
+  name: angular-service
+spec:
+  selector:
+    app: angular
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 31000
+  type: NodePort   
+  --------------------------------------------------------------------------------------------------------------------------------------
